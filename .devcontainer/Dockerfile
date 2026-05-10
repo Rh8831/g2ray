@@ -11,6 +11,7 @@ RUN echo "📦 Installing relay dependencies..." && \
 
 COPY install.sh /app/install.sh
 COPY nginx.conf.template /app/nginx.conf.template
+COPY config.json /app/config.json
 COPY startup.sh /app/startup.sh
 
 RUN chmod +x /app/install.sh /app/startup.sh && \

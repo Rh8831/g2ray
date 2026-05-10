@@ -1,4 +1,6 @@
 {
-  "deprecated": true,
-  "message": "G2Ray is now an XHTTP edge relay. Configure G2RAY_UPSTREAM_URL instead of running a local Xray/VLESS config."
+  "upstreamUrl": "",
+  "listenPort": 443,
+  "logLevel": "info",
+  "accessLog": "on"
 }
