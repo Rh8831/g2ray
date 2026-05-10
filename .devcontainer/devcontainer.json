@@ -1,9 +1,10 @@
 {
-  "name": "ghtun",
+  "name": "g2ray-xhttp-relay",
   "build": {
     "dockerfile": "./Dockerfile",
     "context": "."
   },
+  "overrideCommand": false,
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": false
@@ -12,10 +13,9 @@
       "version": "latest"
     }
   },
-  "postAttachCommand": "bash -lc '/app/startup.sh'",
   "portsAttributes": {
     "443": {
-      "label": "xray",
+      "label": "xhttp-relay",
       "protocol": "http",
       "onAutoForward": "silent"
     }
