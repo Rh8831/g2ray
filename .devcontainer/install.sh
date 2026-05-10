@@ -1,11 +1,8 @@
-#!/bin/sh
+#!/usr/bin/env bash
+set -euo pipefail
 
-echo "downloading xray"
-wget -O ${PWD}/xray.zip https://github.com/XTLS/Xray-core/releases/download/v26.3.27/Xray-linux-64.zip
+echo "🧹 Preparing nginx relay runtime directories..."
+mkdir -p /run/nginx /var/cache/nginx /var/log/nginx
+rm -f /etc/nginx/sites-enabled/default
 
-echo "installing"
-unzip xray.zip && chmod +x xray
-mv xray /usr/local/bin/xray
-
-rm -rf ${PWD}/*
-echo "installed!"
+echo "✅ Relay base image is ready. No local V2Ray/Xray core is installed."

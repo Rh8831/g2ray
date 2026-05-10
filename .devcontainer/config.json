@@ -1,28 +1,4 @@
 {
-  "inbounds": [
-    {
-      "port": 443,
-      "protocol": "vless",
-      "settings": {
-        "clients": [
-          {
-            "id": "550e8400-e29b-41d4-a716-446655440000"
-          }
-        ],
-        "decryption": "none"
-      },
-      "streamSettings": {
-        "network": "xhttp",
-        "xhttpSettings": {
-          "mode": "packet-up",
-          "path": "/"
-        }
-      }
-    }
-  ],
-  "outbounds": [
-    {
-      "protocol": "freedom"
-    }
-  ]
+  "deprecated": true,
+  "message": "G2Ray is now an XHTTP edge relay. Configure G2RAY_UPSTREAM_URL instead of running a local Xray/VLESS config."
 }
