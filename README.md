@@ -34,7 +34,15 @@ That means:
 
 ## Required Configuration
 
-Create a Codespaces secret or environment variable named `G2RAY_UPSTREAM_URL` before starting the container:
+Set the upstream URL before starting the container. The easiest option is `.devcontainer/config.json`:
+
+```json
+{
+  "upstreamUrl": "https://your-xray-server.example.com/xhttp"
+}
+```
+
+You can still override it with a Codespaces secret or environment variable when you do not want the URL in the repository:
 
 ```bash
 G2RAY_UPSTREAM_URL=https://your-xray-server.example.com/xhttp
@@ -49,33 +57,33 @@ Optional environment variables:
 
 ```bash
 G2RAY_LISTEN_PORT=443
-G2RAY_PUBLIC_URL=https://relay.example.com
+G2RAY_CONFIG_FILE=/path/to/config.json
 G2RAY_LOG_LEVEL=info
 G2RAY_ACCESS_LOG=on
 ```
 
-`G2RAY_PUBLIC_URL` lets you publish the relay behind a custom domain, tunnel, load balancer, or any URL that is not the default Codespaces forwarded URL. `G2RAY_EXTERNAL_URL` is also accepted as a backwards-compatible alias.
+`.devcontainer/config.json` also supports `listenPort`, `logLevel`, and `accessLog`. Environment variables take precedence over values in the JSON config file.
 
 `G2RAY_LOG_LEVEL` controls nginx error logging and startup verbosity. Supported values are `debug`, `info`, `notice`, `warn`, `error`, `crit`, `alert`, and `emerg`. `G2RAY_ACCESS_LOG` accepts `on` or `off`; when enabled, access logs are emitted as structured JSON to stdout.
 
-If `G2RAY_UPSTREAM_URL` is missing, the container stays alive and prints setup instructions instead of pretending to run a proxy.
+If no upstream URL is configured, the container stays alive and prints setup instructions instead of pretending to run a proxy.
 
 ## Upstream Xray Requirements
 
-Your upstream server should expose an XHTTP-compatible inbound. The exact Xray configuration depends on your deployment, but it should match the URL you put in `G2RAY_UPSTREAM_URL`:
+Your upstream server should expose an XHTTP-compatible inbound. The exact Xray configuration depends on your deployment, but it should match the upstream URL you configure in `.devcontainer/config.json` or `G2RAY_UPSTREAM_URL`:
 
-- The hostname in `G2RAY_UPSTREAM_URL` must route to your server.
-- The path in `G2RAY_UPSTREAM_URL` must match the XHTTP path expected by the upstream server.
+- The hostname in the upstream URL must route to your server.
+- The path in the upstream URL must match the XHTTP path expected by the upstream server.
 - Your client credentials must match the upstream Xray server, not this Codespace.
 - For HTTPS upstreams, the relay sends SNI using the upstream hostname.
 
 ## Setup in GitHub Codespaces
 
 1. Fork this repository.
-2. Add a repository or account Codespaces secret named `G2RAY_UPSTREAM_URL` with your upstream Xray XHTTP URL.
+2. Put your upstream Xray XHTTP URL in `.devcontainer/config.json` as `upstreamUrl`, or add a repository/account Codespaces secret named `G2RAY_UPSTREAM_URL`.
 3. Open the repository in GitHub Codespaces.
 4. Wait for the dev container to build and start.
-5. Use either the forwarded Codespaces URL or your own `G2RAY_PUBLIC_URL` as the client-facing host.
+5. Use the forwarded Codespaces URL as the client-facing host.
 
 GitHub exposes forwarded ports with a URL like:
 
@@ -85,11 +93,11 @@ https://<codespace-name>-443.app.github.dev
 
 Configure your VLESS + XHTTP client with:
 
-- **Address / host:** the hostname from `G2RAY_PUBLIC_URL`, or the forwarded Codespaces hostname when you do not set a custom URL
+- **Address / host:** the forwarded Codespaces hostname
 - **Port:** `443`
 - **Security:** TLS for the Codespaces URL
 - **Transport:** XHTTP
-- **Path:** the same XHTTP path your upstream expects, or the path embedded in `G2RAY_UPSTREAM_URL`
+- **Path:** the same XHTTP path your upstream expects, or the path embedded in the configured upstream URL
 - **UUID and other credentials:** the credentials configured on your upstream Xray server
 
 ## Local Files
@@ -97,9 +105,9 @@ Configure your VLESS + XHTTP client with:
 The refactor is intentionally small at runtime:
 
 - `.devcontainer/Dockerfile` installs nginx and helper tools only.
-- `.devcontainer/startup.sh` validates `G2RAY_UPSTREAM_URL`, accepts an optional public client URL, renders nginx configuration, and starts the relay with structured startup logs.
+- `.devcontainer/startup.sh` loads the optional JSON config file, validates the upstream URL, renders nginx configuration, and starts the relay with structured startup logs.
 - `.devcontainer/nginx.conf.template` disables proxy buffering and request buffering for long-lived XHTTP streams, emits JSON access logs, and forwards request IDs upstream.
-- `.devcontainer/config.json` is kept only as a migration note for users expecting the old Xray config file.
+- `.devcontainer/config.json` is the optional local place to set `upstreamUrl`, `listenPort`, `logLevel`, and `accessLog`.
 
 ## GitHub Codespaces Quota
 
@@ -109,11 +117,11 @@ The refactor is intentionally small at runtime:
 
 ## Troubleshooting
 
-- **Container says `G2RAY_UPSTREAM_URL is not configured`:** add the Codespaces secret/environment variable and rebuild or restart the Codespace.
+- **Container says `G2RAY_UPSTREAM_URL is not configured`:** set `upstreamUrl` in `.devcontainer/config.json`, or add the Codespaces secret/environment variable, then rebuild or restart the Codespace.
 - **Client connects but no traffic flows:** verify the upstream Xray XHTTP path, UUID, and security settings.
 - **TLS/SNI errors to upstream:** use an `https://` upstream URL whose hostname matches the upstream certificate.
-- **404 or unexpected HTTP response:** confirm whether the upstream expects `/`, `/xhttp`, or another path and update `G2RAY_UPSTREAM_URL` accordingly.
-- **Codespaces URL changes:** set `G2RAY_PUBLIC_URL` to a stable custom domain or tunnel URL, or update your client with the latest forwarded port hostname shown by GitHub Codespaces.
+- **404 or unexpected HTTP response:** confirm whether the upstream expects `/`, `/xhttp`, or another path and update the configured upstream URL accordingly.
+- **Codespaces URL changes:** update your client with the latest forwarded port hostname shown by GitHub Codespaces.
 - **Too many logs:** set `G2RAY_ACCESS_LOG=off` to disable request logging, or raise `G2RAY_LOG_LEVEL` to `warn` or `error` for less nginx diagnostic output.
 - **Need request tracing:** leave `G2RAY_ACCESS_LOG=on`; each request log includes `request_id`, upstream status, and upstream response timing as JSON fields.
 
